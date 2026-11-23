@@ -41,3 +41,10 @@ class conexion_con_base_de_datos():
              """ )
         conexion.commit()
         conexion.close()
+
+
+# Prueba de la conexion con la base de datos.
+if __name__ == "__main__":
+    db = conexion_con_base_de_datos()
+    db.iniciar_la_base_de_datos()
+    print("Base de datos inicializada correctamente.")
