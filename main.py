@@ -1,6 +1,7 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from database import conexion_con_base_de_datos
 from modelos import CrearTarea, RespuestaTarea
+from datetime import date
 
 app = FastAPI()
 
@@ -54,3 +55,26 @@ def revisar_tareas():
         for fila in filas
             ]
     return tabla
+
+
+# ACTUALIZACION DE DATOS
+
+@app.patch("/tareas/{id_tarea}")
+
+def actualizar_datos(id_tarea: int, nuevo_dato: CrearTarea):
+    #Actualiza una tarea en la base de datos.
+
+    conexion = instancia.obtener_conexion()
+    el_cursor = conexion.cursor()
+
+    el_cursor.execute(
+        "UPDATE tareas SET descripcion = ?, estado = ? WHERE id_tarea = ?",
+        (nuevo_dato.descripcion, nuevo_dato.estado, id_tarea)
+
+    )
+
+    conexion.commit()
+    if el_cursor.rowcount == 0:
+       raise HTTPException(status_code=404, detail="Tarea no encontrada")
+    conexion.close()
+    return RespuestaTarea(id_tarea= id_tarea, descripcion= nuevo_dato.descripcion, fecha_de_creacion= date.today(), estado= nuevo_dato.estado)
