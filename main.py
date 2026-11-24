@@ -1,0 +1,28 @@
+from fastapi import FastAPI
+from database import conexion_con_base_de_datos
+from modelos import CrearTarea, RespuestaTarea
+
+app = FastAPI()
+
+instancia = conexion_con_base_de_datos()
+
+instancia.iniciar_la_base_de_datos()
+
+@app.post("/tareas", response_model=RespuestaTarea)
+
+def crear_tarea(tarea: CrearTarea):
+    #Crea una tarea en el sistema.
+    conexion = instancia.obtener_conexion()
+    el_cursor = conexion.cursor()
+
+    #Inserto elementos a la tabla.
+
+    el_cursor.execute( 
+        "INSERT INTO tareas(descripcion,fecha_de_creacion,estado,id_usuario) VALUES (?,?,?,?)",
+        (tarea.descripcion, tarea.fecha_de_creacion.isoformat(), tarea.estado, 1)
+
+    )
+    conexion.commit()
+    nuevo_id = el_cursor.lastrowid #guarda el id que genero sql
+    conexion.close()
+    return RespuestaTarea(id_tarea = nuevo_id, descripcion = tarea.descripcion, fecha_de_creacion = tarea.fecha_de_creacion, estado = tarea.estado) 
