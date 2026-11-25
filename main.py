@@ -78,3 +78,23 @@ def actualizar_datos(id_tarea: int, nuevo_dato: CrearTarea):
        raise HTTPException(status_code=404, detail="Tarea no encontrada")
     conexion.close()
     return RespuestaTarea(id_tarea= id_tarea, descripcion= nuevo_dato.descripcion, fecha_de_creacion= date.today(), estado= nuevo_dato.estado)
+
+
+@app.delete("/tareas/{id_tarea}") 
+
+def eliminar_tarea(id_tarea: int):
+    #Elimina una tarea de la base de datos.
+
+    conexion = instancia.obtener_conexion()
+    el_cursor = conexion.cursor() 
+
+    el_cursor.execute(
+        "DELETE FROM tareas WHERE id_tarea =?",
+        (id_tarea,)
+    )  
+    conexion.commit()
+    conexion.close()
+    if el_cursor.rowcount == 0:
+        raise HTTPException(status_code=404, detail="Tarea no encontrada")
+   
+    return {"mensaje": f"Tarea {id_tarea} eliminada correctamente"}
