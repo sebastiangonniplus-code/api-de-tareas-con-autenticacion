@@ -29,14 +29,14 @@ class ActualizarTarea(BaseModel):
 class CrearUsuario(BaseModel):
     #Modela la creacion de un usuario del sistema.
     
-    nombre_de_usuario: str = Field(..., min_length=8)
-    contraseña: str = Field(..., min_length=8)    
+    nombre_usuario: str = Field(..., min_length=8)
+    contraseña_usuario: str = Field(..., min_length=8)    
 
 
 class RespuestaUsuario(BaseModel):
     #Modela como se ve el usuario en el sistema.
     
-    nombre_de_usuario: str
+    nombre_usuario: str
     fecha_de_creacion: date
     id_usuario: int
         
