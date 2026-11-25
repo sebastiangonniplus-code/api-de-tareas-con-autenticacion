@@ -16,3 +16,10 @@ class RespuestaTarea(BaseModel):
     descripcion: str
     fecha_de_creacion: date 
     estado: str 
+
+
+class ActualizarTarea(BaseModel):
+    #Modela una tarea actualizada
+
+    descripcion: str | None = None
+    estado: str | None = None
