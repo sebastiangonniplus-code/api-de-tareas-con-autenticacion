@@ -9,7 +9,7 @@ instancia = conexion_con_base_de_datos()
 
 instancia.iniciar_la_base_de_datos()
 
-@app.post("/tareas", response_model=RespuestaTarea) # CREACION DE TAREAS.
+@app.post("/tareas", response_model=RespuestaTarea, status_code=201) # CREACION DE TAREAS.
 
 def crear_tarea(tarea: CrearTarea):
     #Crea una tarea en el sistema.
@@ -62,7 +62,7 @@ def revisar_tareas():
 
 # ACTUALIZACION DE DATOS
 
-@app.patch("/tareas/{id_tarea}")
+@app.patch("/tareas/{id_tarea}", response_model= RespuestaTarea)
 
 def actualizar_datos(id_tarea: int, nuevo_dato: ActualizarTarea):
     #Actualiza una tarea en la base de datos.
@@ -107,11 +107,11 @@ def eliminar_tarea(id_tarea: int):
             "DELETE FROM tareas WHERE id_tarea =?",
             (id_tarea,)
         )  
+        if el_cursor.rowcount == 0:
+             raise HTTPException(status_code=404, detail="Tarea no encontrada")   
         conexion.commit()
 
     finally:   
         conexion.close()
-    if el_cursor.rowcount == 0:
-        raise HTTPException(status_code=404, detail="Tarea no encontrada")
-   
+    
     return {"mensaje": f"Tarea {id_tarea} eliminada correctamente"}
