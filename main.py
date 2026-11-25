@@ -17,15 +17,17 @@ def crear_tarea(tarea: CrearTarea):
     el_cursor = conexion.cursor()
 
     #Inserto elementos a la tabla.
+    try:
+        el_cursor.execute( 
+            "INSERT INTO tareas(descripcion,fecha_de_creacion,estado,id_usuario) VALUES (?,?,?,?)",
+            (tarea.descripcion, tarea.fecha_de_creacion.isoformat(), tarea.estado, 1)
 
-    el_cursor.execute( 
-        "INSERT INTO tareas(descripcion,fecha_de_creacion,estado,id_usuario) VALUES (?,?,?,?)",
-        (tarea.descripcion, tarea.fecha_de_creacion.isoformat(), tarea.estado, 1)
-
-    )
-    conexion.commit()
-    nuevo_id = el_cursor.lastrowid #guarda el id que genero sql
-    conexion.close()
+        )
+        conexion.commit()
+        nuevo_id = el_cursor.lastrowid #guarda el id que genero sql
+    
+    finally:
+        conexion.close()
     return RespuestaTarea(id_tarea = nuevo_id, descripcion = tarea.descripcion, fecha_de_creacion = tarea.fecha_de_creacion, estado = tarea.estado) 
 
 
@@ -37,14 +39,15 @@ def revisar_tareas():
 
     conexion = instancia.obtener_conexion()
     el_cursor = conexion.cursor()
+    try:
+        el_cursor.execute(
+            "SELECT descripcion,fecha_de_creacion,estado,id_tarea FROM tareas",
+            
 
-    el_cursor.execute(
-        "SELECT descripcion,fecha_de_creacion,estado,id_tarea FROM tareas",
-        
-
-    )
-    filas = el_cursor.fetchall()
-    conexion.close()
+        )
+        filas = el_cursor.fetchall()
+    finally:    
+        conexion.close()
     tabla = [
         RespuestaTarea(
             descripcion=fila[0],
@@ -67,16 +70,18 @@ def actualizar_datos(id_tarea: int, nuevo_dato: CrearTarea):
     conexion = instancia.obtener_conexion()
     el_cursor = conexion.cursor()
 
-    el_cursor.execute(
-        "UPDATE tareas SET descripcion = ?, estado = ? WHERE id_tarea = ?",
-        (nuevo_dato.descripcion, nuevo_dato.estado, id_tarea)
+    try:
+        el_cursor.execute(
+            "UPDATE tareas SET descripcion = ?, estado = ? WHERE id_tarea = ?",
+            (nuevo_dato.descripcion, nuevo_dato.estado, id_tarea)
 
-    )
+        )
 
-    conexion.commit()
-    if el_cursor.rowcount == 0:
-       raise HTTPException(status_code=404, detail="Tarea no encontrada")
-    conexion.close()
+        conexion.commit()
+        if el_cursor.rowcount == 0:
+            raise HTTPException(status_code=404, detail="Tarea no encontrada")
+    finally:
+        conexion.close()
     return RespuestaTarea(id_tarea= id_tarea, descripcion= nuevo_dato.descripcion, fecha_de_creacion= date.today(), estado= nuevo_dato.estado)
 
 
@@ -87,13 +92,15 @@ def eliminar_tarea(id_tarea: int):
 
     conexion = instancia.obtener_conexion()
     el_cursor = conexion.cursor() 
+    try:
+        el_cursor.execute(
+            "DELETE FROM tareas WHERE id_tarea =?",
+            (id_tarea,)
+        )  
+        conexion.commit()
 
-    el_cursor.execute(
-        "DELETE FROM tareas WHERE id_tarea =?",
-        (id_tarea,)
-    )  
-    conexion.commit()
-    conexion.close()
+    finally:   
+        conexion.close()
     if el_cursor.rowcount == 0:
         raise HTTPException(status_code=404, detail="Tarea no encontrada")
    
