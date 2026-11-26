@@ -1,12 +1,16 @@
 from fastapi import FastAPI, HTTPException, Depends
 from database import conexion_con_base_de_datos
-from modelos import CrearTarea, RespuestaTarea, ActualizarTarea
+from modelos import CrearTarea, RespuestaTarea, ActualizarTarea, CrearUsuario, RespuestaUsuario, LoguearUsuario, Token, crear_access_token, SECRET_KEY
+from pwdlib import PasswordHash
+import sqlite3
+import jwt
+from fastapi.security import OAuth2PasswordBearer
 
 app = FastAPI()
-
+password_hash = PasswordHash.recommended()
 instancia = conexion_con_base_de_datos()
-
 instancia.iniciar_la_base_de_datos()
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login") #Extrae el token del header bearer.
 
 def obtener_db():
     #Inicializa y finaliza la conexion del servidor.
@@ -19,14 +23,88 @@ def obtener_db():
         conexion.close()    
 
 
+
+
+
+#Sistema de creacion de usuario#
+
+@app.post("/usuarios", response_model=RespuestaUsuario, status_code=201)
+
+def crear_Usuario(usuario: CrearUsuario, el_cursor = Depends(obtener_db)):
+    #Crea un usuario en el sistema.
+    
+    contraseña_hasheada = password_hash.hash(usuario.contraseña_usuario)
+    try:
+        el_cursor.execute(
+        "INSERT INTO usuarios(nombre_usuario,contraseña_usuario,fecha_de_creacion) VALUES (?,?,?)",
+        (usuario.nombre_usuario, contraseña_hasheada, usuario.fecha_de_creacion.isoformat())
+        ) 
+
+        el_cursor.connection.commit()
+
+    except sqlite3.IntegrityError:
+        raise HTTPException(status_code=409, detail="El nombre de usuario ya existe")    
+    
+    nuevo_id = el_cursor.lastrowid #guarda el id que genero sql
+    return RespuestaUsuario(nombre_usuario = usuario.nombre_usuario, fecha_de_creacion = usuario.fecha_de_creacion, id_usuario = nuevo_id)
+
+
+
+
+
+##Sistema de Login##
+
+@app.post("/login", response_model=Token, status_code=200)
+
+def loguear_usuario(loguear: LoguearUsuario, el_cursor = Depends(obtener_db)):
+    #Loguea el usuario en el sistema.
+
+    el_cursor.execute(
+        "SELECT id_usuario, contraseña_usuario FROM usuarios WHERE nombre_usuario = ?",
+        (loguear.nombre_usuario,)
+    )
+
+    fila = el_cursor.fetchone()
+    
+    if fila is None or not password_hash.verify(loguear.contraseña_usuario, fila["contraseña_usuario"]):
+        raise HTTPException(status_code=401, detail="Credenciales inválidas")
+
+    token = crear_access_token({"sub": str(fila["id_usuario"])})
+    return Token(access_token=token, token_type="bearer")
+
+def obtener_usuario_actual(token: str = Depends(oauth2_scheme)):
+    #Revisa que el token sea correcto.
+
+    try:
+        datos = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="El token expiro")
+    
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="El token es invalido")
+
+    id_usuario = datos.get("sub")
+    if id_usuario is not None:
+        return int(id_usuario)
+    else:
+        raise HTTPException(status_code=401, detail="Token inválido o sin sujeto")
+
+    
+
+
+
+
+
+#Sistema CRUD#
+
 @app.post("/tareas", response_model=RespuestaTarea, status_code=201) # CREACION DE TAREAS.
 
-def crear_tarea(tarea: CrearTarea, el_cursor = Depends(obtener_db)):
+def crear_tarea(tarea: CrearTarea, el_cursor = Depends(obtener_db), usuario_id: int = Depends(obtener_usuario_actual)):
     #Crea una tarea en el sistema.
 
     el_cursor.execute( 
          "INSERT INTO tareas(descripcion,fecha_de_creacion,estado,id_usuario) VALUES (?,?,?,?)",
-        (tarea.descripcion, tarea.fecha_de_creacion.isoformat(), tarea.estado, 1)
+        (tarea.descripcion, tarea.fecha_de_creacion.isoformat(), tarea.estado, usuario_id)
         )
     el_cursor.connection.commit()
     nuevo_id = el_cursor.lastrowid #guarda el id que genero sql
@@ -36,11 +114,12 @@ def crear_tarea(tarea: CrearTarea, el_cursor = Depends(obtener_db)):
 
 @app.get("/tareas", response_model=list[RespuestaTarea])
 
-def revisar_tareas(el_cursor = Depends(obtener_db)):
+def revisar_tareas(el_cursor = Depends(obtener_db), usuario_id: int = Depends(obtener_usuario_actual)):
     #Enlista todas las tareas del sistema.
 
     el_cursor.execute(
-         "SELECT descripcion,fecha_de_creacion,estado,id_tarea FROM tareas",
+         "SELECT descripcion,fecha_de_creacion,estado,id_tarea FROM tareas WHERE id_usuario = ?",
+           (usuario_id,)
            )
     filas = el_cursor.fetchall()
     tabla = [
@@ -58,12 +137,12 @@ def revisar_tareas(el_cursor = Depends(obtener_db)):
 # ACTUALIZACION DE DATOS
 
 @app.patch("/tareas/{id_tarea}", response_model=RespuestaTarea)
-def actualizar_datos(id_tarea: int, nuevo_dato: ActualizarTarea, el_cursor=Depends(obtener_db)):
+def actualizar_datos(id_tarea: int, nuevo_dato: ActualizarTarea, el_cursor=Depends(obtener_db),usuario_id: int = Depends(obtener_usuario_actual)):
     # Actualiza una tarea en la base de datos.
 
     el_cursor.execute(
-        "SELECT descripcion, estado, fecha_de_creacion FROM tareas WHERE id_tarea = ?",
-        (id_tarea,)
+        "SELECT descripcion, estado, fecha_de_creacion FROM tareas WHERE id_tarea = ? AND id_usuario =?",
+        (id_tarea,usuario_id)
     )
 
     fila = el_cursor.fetchone()
@@ -84,8 +163,8 @@ def actualizar_datos(id_tarea: int, nuevo_dato: ActualizarTarea, el_cursor=Depen
     )
 
     el_cursor.execute(
-        "UPDATE tareas SET descripcion = ?, estado = ? WHERE id_tarea = ?",
-        (descripcion_final, estado_final, id_tarea)
+        "UPDATE tareas SET descripcion = ?, estado = ? WHERE id_tarea = ? AND id_usuario = ?",
+        (descripcion_final, estado_final, id_tarea, usuario_id)
     )
 
     el_cursor.connection.commit()
@@ -99,12 +178,12 @@ def actualizar_datos(id_tarea: int, nuevo_dato: ActualizarTarea, el_cursor=Depen
 
 @app.delete("/tareas/{id_tarea}") 
 
-def eliminar_tarea(id_tarea: int, el_cursor=Depends(obtener_db)):
+def eliminar_tarea(id_tarea: int, el_cursor=Depends(obtener_db),usuario_id: int = Depends(obtener_usuario_actual)):
     # Elimina una tarea de la base de datos.
 
     el_cursor.execute(
-        "DELETE FROM tareas WHERE id_tarea = ?",
-        (id_tarea,)
+        "DELETE FROM tareas WHERE id_tarea = ? AND id_usuario = ?",
+        (id_tarea,usuario_id)
     )
 
     if el_cursor.rowcount == 0:
