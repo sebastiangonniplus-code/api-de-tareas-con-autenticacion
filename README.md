@@ -1,4 +1,4 @@
-# api-de-tareas-con-auntenticacion
+# api-de-tareas-con-autenticacion
 
 API REST de gestión de tareas desarrollada con **FastAPI**, **Pydantic** y **SQLite**, con autenticación mediante **JWT** (`PyJWT`) y hashing seguro de contraseñas con **pwdlib**. Cada usuario gestiona de forma aislada sus propias tareas.
 
@@ -21,27 +21,24 @@ API REST de gestión de tareas desarrollada con **FastAPI**, **Pydantic** y **SQ
    cd python-task-cli
 
 2. Crear y activar un entorno virtual (venv), e instalar dependencias:
-    Bash
-
+   ```bash
     python -m venv venv
     source venv/Scripts/activate   # En Windows (Git Bash)
-    pip install fastapi uvicorn pydantic PyJWT pwdlib python-dotenv
+    pip install fastapi uvicorn pydantic PyJWT pwdlib python-dotenv 
 
-    Configurar las variables de entorno creando un archivo .env en la raíz (no subir este archivo a Git):
-    Fragmento de código
-
+3. Configurar las variables de entorno creando un archivo .env en la raíz (no subir este archivo a Git):
+    
     SECRET_KEY=tu_clave_segura_de_al_menos_32_bytes
 
     Podés generar una clave segura ejecutando:
-    Bash
+       ```bash
+     python -c "import secrets; print(secrets.token_hex(32))"
 
-    python -c "import secrets; print(secrets.token_hex(32))"
 
-Ejecución
+    Ejecución
 
-Levantar el servidor de desarrollo con uvicorn:
-Bash
+    Levantar el servidor de desarrollo con uvicorn:
+       ```bash
+    uvicorn main:app --reload
 
-uvicorn main:app --reload
-
-La documentación interactiva (Swagger UI) queda disponible en http://127.0.0.1:8000/docs.
+    La documentación interactiva (Swagger UI) queda disponible en http://127.0.0.1:8000/docs.     
