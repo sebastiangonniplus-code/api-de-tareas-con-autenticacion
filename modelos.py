@@ -1,9 +1,7 @@
 from pydantic import BaseModel, Field
 from datetime import date, datetime, timezone, timedelta
 import jwt
-import os
 
-SECRET_KEY = os.getenv("SECRET_KEY", "clave-temporal-desarrollo")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
@@ -11,13 +9,13 @@ class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
 
-def crear_access_token(datos: dict):
+def crear_access_token(datos: dict, secret_key:str):
     #Da acceso tras loguear.
      
      payload = datos.copy() 
      expiracion = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
      payload["exp"] = expiracion
-     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+     return jwt.encode(payload, secret_key, algorithm=ALGORITHM)
 
 
 class CrearTarea(BaseModel):

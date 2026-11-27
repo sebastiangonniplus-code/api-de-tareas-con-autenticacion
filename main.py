@@ -1,11 +1,20 @@
 from fastapi import FastAPI, HTTPException, Depends
 from database import conexion_con_base_de_datos
-from modelos import CrearTarea, RespuestaTarea, ActualizarTarea, CrearUsuario, RespuestaUsuario, LoguearUsuario, Token, crear_access_token, SECRET_KEY
+from modelos import CrearTarea, RespuestaTarea, ActualizarTarea, CrearUsuario, RespuestaUsuario, LoguearUsuario, Token, crear_access_token
 from pwdlib import PasswordHash
 import sqlite3
 import jwt
 from fastapi.security import OAuth2PasswordBearer
+import os
+from dotenv import load_dotenv
+from pathlib import Path
 
+BASE_DIR = Path(__file__).resolve().parent
+load_dotenv(BASE_DIR / ".env")
+
+SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY or len(SECRET_KEY.encode("utf-8")) < 32:
+    raise RuntimeError("Falta SECRET_KEY o tiene menos de 32 bytes en .env")
 app = FastAPI()
 password_hash = PasswordHash.recommended()
 instancia = conexion_con_base_de_datos()
@@ -69,7 +78,7 @@ def loguear_usuario(loguear: LoguearUsuario, el_cursor = Depends(obtener_db)):
     if fila is None or not password_hash.verify(loguear.contraseña_usuario, fila["contraseña_usuario"]):
         raise HTTPException(status_code=401, detail="Credenciales inválidas")
 
-    token = crear_access_token({"sub": str(fila["id_usuario"])})
+    token = crear_access_token({"sub": str(fila["id_usuario"])}, SECRET_KEY)
     return Token(access_token=token, token_type="bearer")
 
 def obtener_usuario_actual(token: str = Depends(oauth2_scheme)):
@@ -84,13 +93,13 @@ def obtener_usuario_actual(token: str = Depends(oauth2_scheme)):
         raise HTTPException(status_code=401, detail="El token es invalido")
 
     id_usuario = datos.get("sub")
-    if id_usuario is not None:
-        return int(id_usuario)
-    else:
+    if id_usuario is None:
         raise HTTPException(status_code=401, detail="Token inválido o sin sujeto")
 
-    
-
+    try:
+        return int(id_usuario)
+    except (ValueError, TypeError):
+        raise HTTPException(status_code=401, detail="Token inválido o sin sujeto")
 
 
 
