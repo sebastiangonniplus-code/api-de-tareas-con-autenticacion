@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Tareas con Autenticación</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+    <!-- Barra superior -->
+    <nav class="navbar bg-dark mb-4" data-bs-theme="dark">
+        <div class="container">
+            <span class="navbar-brand mb-0 h1">API Tareas con Autenticación</span>
+        </div>
+    </nav>
+
+    <main class="container">
+        <!-- Mensajes de estado o error -->
+        <div id="alerta" class="alert d-none" role="alert"></div>
+
+        <!-- Sección de Autenticación -->
+        <section id="seccion-auth" class="row g-4 justify-content-center">
+            <!-- Login -->
+            <div class="col-md-5">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h2 class="h5 card-title mb-3">Iniciar sesión</h2>
+                        <form id="form-login">
+                            <div class="mb-3">
+                                <label for="login-usuario" class="form-label">Usuario</label>
+                                <input type="text" class="form-control" id="login-usuario" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="login-password" class="form-label">Contraseña</label>
+                                <input type="password" class="form-control" id="login-password" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Entrar</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Registro -->
+            <div class="col-md-5">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h2 class="h5 card-title mb-3">Crear cuenta</h2>
+                        <form id="form-registro">
+                            <div class="mb-3">
+                                <label for="reg-usuario" class="form-label">Usuario (mín. 8 caracteres)</label>
+                                <input type="text" class="form-control" id="reg-usuario" minlength="8" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="reg-password" class="form-label">Contraseña (mín. 8 caracteres)</label>
+                                <input type="password" class="form-control" id="reg-password" minlength="8" required>
+                            </div>
+                            <button type="submit" class="btn btn-outline-dark w-100">Registrarse</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sección de Tareas (oculta hasta iniciar sesión) -->
+        <section id="seccion-tareas" class="d-none">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2 class="h4 mb-0">Mis tareas</h2>
+                <button id="btn-logout" class="btn btn-sm btn-outline-danger">Cerrar sesión</button>
+            </div>
+
+            <!-- Formulario nueva tarea -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <form id="form-tarea" class="row g-2">
+                        <div class="col-md-8">
+                            <input type="text" class="form-control" id="tarea-descripcion" placeholder="Nueva tarea..." required>
+                        </div>
+                        <div class="col-md-2">
+                            <select class="form-select" id="tarea-estado">
+                                <option value="Pendiente" selected>Pendiente</option>
+                                <option value="En progreso">En progreso</option>
+                                <option value="Completada">Completada</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-success w-100">Agregar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Lista de tareas -->
+            <div id="lista-tareas" class="list-group shadow-sm"></div>
+        </section>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
