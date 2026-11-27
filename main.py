@@ -8,6 +8,8 @@ from fastapi.security import OAuth2PasswordBearer
 import os
 from dotenv import load_dotenv
 from pathlib import Path
+from fastapi.middleware.cors import CORSMiddleware
+
 
 BASE_DIR = Path(__file__).resolve().parent
 load_dotenv(BASE_DIR / ".env")
@@ -16,10 +18,27 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 if not SECRET_KEY or len(SECRET_KEY.encode("utf-8")) < 32:
     raise RuntimeError("Falta SECRET_KEY o tiene menos de 32 bytes en .env")
 app = FastAPI()
+
+origenes_permitidos = [
+    "http://127.0.0.1:5500",
+    "http://localhost:5500",
+    "http://127.0.0.1:3000",
+    "http://localhost:3000",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origenes_permitidos,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 password_hash = PasswordHash.recommended()
 instancia = conexion_con_base_de_datos()
 instancia.iniciar_la_base_de_datos()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login") #Extrae el token del header bearer.
+
+
 
 def obtener_db():
     #Inicializa y finaliza la conexion del servidor.
