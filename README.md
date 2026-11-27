@@ -24,7 +24,7 @@ API REST de gestión de tareas desarrollada con **FastAPI**, **Pydantic** y **SQ
    ```bash
     python -m venv venv
     source venv/Scripts/activate   # En Windows (Git Bash)
-    pip install fastapi uvicorn pydantic PyJWT pwdlib python-dotenv 
+    pip install fastapi uvicorn pydantic PyJWT "pwdlib[argon2]" argon2-cffi python-dotenv
 
 3. Configurar las variables de entorno creando un archivo .env en la raíz (no subir este archivo a Git):
     
