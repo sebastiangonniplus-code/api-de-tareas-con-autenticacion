@@ -1,28 +1,47 @@
-# Task Tracker CLI
+# api-de-tareas-con-auntenticacion
 
-Una aplicación de línea de comandos (CLI) desarrollada en Python aplicando Programación Orientada a Objetos (POO) para gestionar tareas pendientes, guardando los datos de forma local en un archivo JSON y con control de versiones en Git.
+API REST de gestión de tareas desarrollada con **FastAPI**, **Pydantic** y **SQLite**, con autenticación mediante **JWT** (`PyJWT`) y hashing seguro de contraseñas con **pwdlib**. Cada usuario gestiona de forma aislada sus propias tareas.
 
 ## Características
 
-- **Añadir tareas:** Creación automática de ID secuencial y registro de fecha/hora exacta.
-- **Listar tareas:** Visualización en formato de lista prolija con ID, estado, descripción y fecha de creación.
-- **Marcar como completada:** Actualización del estado de la tarea de `todo` a `completada` mediante su ID.
-- **Eliminar tareas:** Borrado seguro de tareas individuales de la base de datos local.
-- **Persistencia de datos:** Almacenamiento local automático utilizando únicamente la librería estándar de Python (`json`, `os`, `sys`, `datetime`).
+- Registro de usuarios (`POST /usuarios`) con contraseñas hasheadas y control de duplicados (`409`).
+- Autenticación con JWT (`POST /login`) usando `SECRET_KEY` validada desde `.env` (mínimo 32 bytes).
+- CRUD completo de tareas protegido por token Bearer:
+  - `POST /tareas` — Crear tarea asociada al usuario autenticado.
+  - `GET /tareas` — Listar tareas del usuario autenticado.
+  - `PATCH /tareas/{id_tarea}` — Actualizar descripción o estado de una tarea propia.
+  - `DELETE /tareas/{id_tarea}` — Eliminar una tarea propia.
+- Persistencia en **SQLite** (`tareas.db`) con claves foráneas activas (`PRAGMA foreign_keys = ON`).
 
-## Uso
+## Requisitos e instalación
 
-Ejecuta el script desde la terminal pasando los comandos correspondientes:
+1. Clonar el repositorio y entrar a la carpeta del proyecto:
+   ```bash
+   git clone [https://github.com/sebastiangonniplus-code/python-task-cli.git](https://github.com/sebastiangonniplus-code/python-task-cli.git)
+   cd python-task-cli
 
-```bash
-# Añadir una tarea
-python task.py add "Estudiar POO en Python"
+2. Crear y activar un entorno virtual (venv), e instalar dependencias:
+    Bash
 
-# Listar todas las tareas
-python task.py list
+    python -m venv venv
+    source venv/Scripts/activate   # En Windows (Git Bash)
+    pip install fastapi uvicorn pydantic PyJWT pwdlib python-dotenv
 
-# Marcar una tarea como completada (usando su ID)
-python task.py done 1
+    Configurar las variables de entorno creando un archivo .env en la raíz (no subir este archivo a Git):
+    Fragmento de código
 
-# Eliminar una tarea (usando su ID)
-python task.py delete 1
+    SECRET_KEY=tu_clave_segura_de_al_menos_32_bytes
+
+    Podés generar una clave segura ejecutando:
+    Bash
+
+    python -c "import secrets; print(secrets.token_hex(32))"
+
+Ejecución
+
+Levantar el servidor de desarrollo con uvicorn:
+Bash
+
+uvicorn main:app --reload
+
+La documentación interactiva (Swagger UI) queda disponible en http://127.0.0.1:8000/docs.
