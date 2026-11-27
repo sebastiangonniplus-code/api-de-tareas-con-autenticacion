@@ -31,14 +31,13 @@ API REST de gestión de tareas desarrollada con **FastAPI**, **Pydantic** y **SQ
     SECRET_KEY=tu_clave_segura_de_al_menos_32_bytes
 
     Podés generar una clave segura ejecutando:
-       ```bash
-     python -c "import secrets; print(secrets.token_hex(32))"
+    ```bash
+    python -c "import secrets; print(secrets.token_hex(32))"
 
 
     Ejecución
 
     Levantar el servidor de desarrollo con uvicorn:
-       ```bash
-    uvicorn main:app --reload
+      uvicorn main:app --reload
 
     La documentación interactiva (Swagger UI) queda disponible en http://127.0.0.1:8000/docs.     
