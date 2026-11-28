@@ -17,8 +17,8 @@ API REST de gestión de tareas desarrollada con **FastAPI**, **Pydantic** y **SQ
 
 1. Clonar el repositorio y entrar a la carpeta del proyecto:
    ```bash
-   git clone [https://github.com/sebastiangonniplus-code/python-task-cli.git](https://github.com/sebastiangonniplus-code/python-task-cli.git)
-   cd python-task-cli
+   git clone https://github.com/sebastiangonniplus-code/api-de-tareas-con-autenticacion.git
+   cd api-de-tareas-con-autenticacion
 
 2. Crear y activar un entorno virtual (venv), e instalar dependencias:
    ```bash
